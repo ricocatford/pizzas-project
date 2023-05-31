@@ -16,6 +16,7 @@ export default class Config {
     postgresPassword: string
     postgresDatabase: string
     postgresPort: number
+    jwtKey: string
 
     constructor() {
         dotenv.config();
@@ -26,5 +27,8 @@ export default class Config {
         this.postgresPassword = loadEnvironmentVariable("POSTGRES_PASSWORD");
         this.postgresDatabase = loadEnvironmentVariable("POSTGRES_DATABASE");
         this.postgresPort = Number(loadEnvironmentVariable("POSTGRES_PORT"));
+        this.jwtKey = loadEnvironmentVariable("JWT_KEY");
     }
 }
+
+export const config = new Config();

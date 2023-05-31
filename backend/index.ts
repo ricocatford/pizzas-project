@@ -1,12 +1,14 @@
 import express, { Express, Request, Response } from "express";
 import CryptoJS from "crypto-js";
-import Config from "./config";
+import { config } from "./config";
 import sql from "./db";
+import jwt from "jsonwebtoken";
 
+import { NewUser } from "./types/NewUser";
+import { Login } from "./types/Login";
+import { authMiddleware } from "./middleware/authMiddleware";
 
 const app: Express = express();
-
-const config = new Config();
 
 app.use(express.json());
 
@@ -18,15 +20,40 @@ app.listen(config.port, () => {
     console.log(`⚡️[server]: Server is running at http://localhost:${config.port}`);
 });
 
-type NewUser = {
-    id: string,
-    firstName: string,
-    lastName: string,
-    emailAddress: string,
-    password: string,
-}
+app.post("/login", async (req: Request<any, any, Login>, res: Response) => {
+    const { emailAddress, password } = req.body;
 
-app.post("/users", async (req: Request<any, any, NewUser>, res: Response) => {
+    const searchUserResult = await sql`
+        select id, email_address, password from pizzas.users
+        where email_address = ${emailAddress}
+    `
+    const searchUser = searchUserResult[0];
+    if (!searchUser) {
+        res.status(401).send("Credentials are invalid.")
+    }
+
+    const decryptedPassword = CryptoJS.AES.decrypt(searchUser.password, config.encryptionKey).toString(CryptoJS.enc.Utf8);
+    if (password !== decryptedPassword) {
+        res.status(401).send("Credentials are invalid.")
+    }
+
+    const generatedToken = jwt.sign(
+        {
+            id: searchUser.id,
+            emailAddress: searchUser.emailAddress
+        },
+        config.jwtKey,
+        {
+            expiresIn: "5min",
+        }
+    )
+
+    res.status(200).send({
+        token: generatedToken,
+    });
+})
+
+app.post("/register", async (req: Request<any, any, NewUser>, res: Response) => {
     const encryptedPassword = CryptoJS.AES.encrypt(req.body.password, config.encryptionKey).toString();
     const user = {
         id: req.body.id,
@@ -35,6 +62,7 @@ app.post("/users", async (req: Request<any, any, NewUser>, res: Response) => {
         emailAddress: req.body.emailAddress,
         password: encryptedPassword,
     }
+
     try {
         await sql`
             insert into pizzas.users
@@ -43,8 +71,13 @@ app.post("/users", async (req: Request<any, any, NewUser>, res: Response) => {
                 (${user.id}, ${user.firstName}, ${user.lastName}, ${user.emailAddress}, ${user.password})
         `;
     } catch (error) {
-        console.log(error);
+        res.status(409).send("This email address is already in use.");
     }
 
     res.send();
 })
+
+app.get("/protected", authMiddleware, (req: Request, res: Response) => {
+    console.log(req.body);
+    res.send("Express + TypeScript Server");
+});

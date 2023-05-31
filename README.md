@@ -4,15 +4,16 @@
 
 ### Backend
 
-- NodeJS
-- Express
-- SQL
-- postgres NPM package
-- TypeScript
+-   NodeJS
+-   Express
+-   SQL
+-   CryptoJS
+-   postgres NPM package
+-   TypeScript
 
 ### Frontend
 
-- NextJS
-- TypeScript
+-   NextJS
+-   TypeScript
 
 ## Features

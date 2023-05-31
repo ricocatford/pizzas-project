@@ -14,19 +14,44 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const crypto_js_1 = __importDefault(require("crypto-js"));
-const config_1 = __importDefault(require("./config"));
+const config_1 = require("./config");
 const db_1 = __importDefault(require("./db"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const authMiddleware_1 = require("./middleware/authMiddleware");
 const app = (0, express_1.default)();
-const config = new config_1.default();
 app.use(express_1.default.json());
 app.get("/", (req, res) => {
     res.send("Express + TypeScript Server");
 });
-app.listen(config.port, () => {
-    console.log(`⚡️[server]: Server is running at http://localhost:${config.port}`);
+app.listen(config_1.config.port, () => {
+    console.log(`⚡️[server]: Server is running at http://localhost:${config_1.config.port}`);
 });
-app.post("/users", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const encryptedPassword = crypto_js_1.default.AES.encrypt(req.body.password, config.encryptionKey).toString();
+app.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { emailAddress, password } = req.body;
+    const searchUserResult = yield (0, db_1.default) `
+        select id, email_address, password from pizzas.users
+        where email_address = ${emailAddress}
+    `;
+    const searchUser = searchUserResult[0];
+    if (!searchUser) {
+        res.status(401).send("Credentials are invalid.");
+    }
+    const decryptedPassword = crypto_js_1.default.AES.decrypt(searchUser.password, config_1.config.encryptionKey).toString(crypto_js_1.default.enc.Utf8);
+    if (password !== decryptedPassword) {
+        res.status(401).send("Credentials are invalid.");
+    }
+    const generatedToken = jsonwebtoken_1.default.sign({
+        id: searchUser.id,
+        emailAddress: searchUser.emailAddress
+    }, config_1.config.jwtKey, {
+        expiresIn: "5min",
+    });
+    res.status(200).send({
+        token: generatedToken,
+    });
+}));
+app.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const encryptedPassword = crypto_js_1.default.AES.encrypt(req.body.password, config_1.config.encryptionKey).toString();
     const user = {
         id: req.body.id,
         firstName: req.body.firstName,
@@ -43,7 +68,11 @@ app.post("/users", (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         `;
     }
     catch (error) {
-        console.log(error);
+        res.status(409).send("This email address is already in use.");
     }
     res.send();
 }));
+app.get("/protected", authMiddleware_1.authMiddleware, (req, res) => {
+    console.log(req.body);
+    res.send("Express + TypeScript Server");
+});
