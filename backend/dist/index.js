@@ -13,12 +13,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const crypto_js_1 = __importDefault(require("crypto-js"));
 const config_1 = require("./config");
 const db_1 = __importDefault(require("./db"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const authMiddleware_1 = require("./middleware/authMiddleware");
 const app = (0, express_1.default)();
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 app.use(express_1.default.json());
 app.get("/", (req, res) => {
     res.send("Express + TypeScript Server");
@@ -36,9 +37,10 @@ app.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     if (!searchUser) {
         res.status(401).send("Credentials are invalid.");
     }
-    const decryptedPassword = crypto_js_1.default.AES.decrypt(searchUser.password, config_1.config.encryptionKey).toString(crypto_js_1.default.enc.Utf8);
-    if (password !== decryptedPassword) {
+    const passwordIsMatch = yield bcrypt.compare(password, searchUser.password);
+    if (!passwordIsMatch) {
         res.status(401).send("Credentials are invalid.");
+        return;
     }
     const generatedToken = jsonwebtoken_1.default.sign({
         id: searchUser.id,
@@ -51,7 +53,8 @@ app.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     });
 }));
 app.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const encryptedPassword = crypto_js_1.default.AES.encrypt(req.body.password, config_1.config.encryptionKey).toString();
+    const encryptedPassword = yield bcrypt.hash(req.body.password, saltRounds);
+    req.body.password = encryptedPassword;
     const user = {
         id: req.body.id,
         firstName: req.body.firstName,
