@@ -19,7 +19,6 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const authMiddleware_1 = require("./middleware/authMiddleware");
 const app = (0, express_1.default)();
 const bcrypt = require("bcrypt");
-const saltRounds = 10;
 app.use(express_1.default.json());
 app.get("/", (req, res) => {
     res.send("Express + TypeScript Server");
@@ -53,7 +52,7 @@ app.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     });
 }));
 app.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const encryptedPassword = yield bcrypt.hash(req.body.password, saltRounds);
+    const encryptedPassword = yield bcrypt.hash(req.body.password, 10);
     req.body.password = encryptedPassword;
     const user = {
         id: req.body.id,

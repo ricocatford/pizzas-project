@@ -4,7 +4,7 @@ import { config } from "../config";
 
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authentication;
+    const authHeader = req.headers.authorization;
 
     if (!authHeader || Array.isArray(authHeader) || !authHeader.startsWith("Bearer")) {
         res.status(401).send("Invalid token.");
