@@ -3,8 +3,10 @@ import { config } from "./config";
 
 import getServerRoot from "./api/getServerRoot";
 import { authMiddleware } from "./middleware/authMiddleware";
-import postLogin from "./api/login/postLogin";
 import postRegister from "./api/register/postRegister";
+import postLogin from "./api/login/postLogin";
+import postPizza from "./api/pizzas/admin/postPizza";
+import getPizzas from "./api/pizzas/getPizzas";
 
 const app: Express = express();
 
@@ -16,9 +18,19 @@ app.listen(config.port, () => {
 
 app.get("/", getServerRoot);
 
-app.post("/login", postLogin);
+// Register and Login API
 
 app.post("/register", postRegister);
+
+app.post("/login", postLogin);
+
+// Pizzas API
+
+app.post("/pizzas/admin", postPizza);
+
+app.get("/pizzas", getPizzas);
+
+// Protected API
 
 app.get("/protected", authMiddleware, (req: Request, res: Response) => {
     console.log(req.body);

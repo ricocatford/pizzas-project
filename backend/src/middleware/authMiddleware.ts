@@ -21,18 +21,4 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     }
 
     next();
-
-    // if (auth && auth.startsWith('Bearer')) {
-    //     const token = auth.slice(7);
-
-    //     try {
-    //         const tokenData = verifyToken(token);
-    //         req.body.tokenData = tokenData;
-    //         next();
-    //     } catch (error) {
-    //         throw new ErrorException(ErrorCode.Unauthenticated);
-    //     }
-    // } else {
-    //     throw new ErrorException(ErrorCode.Unauthenticated);
-    // }
 };

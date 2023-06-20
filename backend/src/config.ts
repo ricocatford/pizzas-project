@@ -10,7 +10,6 @@ function loadEnvironmentVariable(environmentVariableName: string): string {
 
 export default class Config {
     port: number
-    encryptionKey: string
     postgresHost: string
     postgresUser: string
     postgresPassword: string
@@ -21,7 +20,6 @@ export default class Config {
     constructor() {
         dotenv.config();
         this.port = Number(loadEnvironmentVariable("PORT"));
-        this.encryptionKey = loadEnvironmentVariable("ENCRYPTION_KEY");
         this.postgresHost = loadEnvironmentVariable("POSTGRES_HOST");
         this.postgresUser = loadEnvironmentVariable("POSTGRES_USER");
         this.postgresPassword = loadEnvironmentVariable("POSTGRES_PASSWORD");

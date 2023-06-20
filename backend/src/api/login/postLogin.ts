@@ -6,6 +6,7 @@ import sql from "../../db";
 
 import { config } from "../../config";
 import { Login } from "./Login";
+import { TokenData } from "./TokenData";
 
 export default async function postLogin(req: Request<any, any, Login>, res: Response) {
     const { emailAddress, password }: Login = req.body;
@@ -29,14 +30,16 @@ export default async function postLogin(req: Request<any, any, Login>, res: Resp
         return;
     }
 
+    const tokenData: TokenData = {
+        userId: searchUser.id,
+        userEmailAddress: searchUser.email_address,
+    }
+
     const generatedToken: string = jwt.sign(
-        {
-            id: searchUser.id,
-            emailAddress: searchUser.emailAddress
-        },
+        tokenData,
         config.jwtKey,
         {
-            expiresIn: "5min",
+            expiresIn: "24h",
         }
     )
 

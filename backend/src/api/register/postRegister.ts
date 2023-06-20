@@ -4,9 +4,9 @@ import sql from "../../db";
 
 import { NewUser } from "./NewUser";
 
+
 export default async function postRegister(req: Request<any, any, NewUser>, res: Response) {
     const encryptedPassword: string = await bcrypt.hash(req.body.password, 10);
-    req.body.password = encryptedPassword;
 
     const user: NewUser = {
         id: req.body.id,
